@@ -1,12 +1,16 @@
+# class for parsing returned packets from the TURF
+
+# identity fields
 TURF_IDS = {
-    "0x54555246": "TURF",
-    "0x5446534d": "TFSM",
-    "0x54494f50": "TIOP",
-    "0x5446494f": "TFIO",
-    "0x53555246": "SURF",
-    "0x5346534d": "SFSM",
+    "0x54555246": "TURF",  # full TURF device
+    "0x5446534d": "TFSM",  # TURF sumulator device (ExanicX25)
+    "0x54494f50": "TIOP",  # TURF+IO Prototype
+    "0x5446494f": "TFIO",  # full TURFIO device
+    "0x53555246": "SURF",  # full SURF device
+    "0x5346534d": "SFSM",  # SURF simulator device (HiTech Global RFSoC)
     "0xFFFFFFFF": "No device present",
 }
+
 
 MONTH = {
     1: "January",
@@ -26,9 +30,9 @@ MONTH = {
 
 class packetparser:
     def __init__(self, data, tag, addr):
-        self.data = data  # saved as an int
-        self.tag = tag
-        self.addr = addr
+        self.data = data  # 32-bits
+        self.tag = tag  # 4-bits
+        self.addr = addr  # 28-bits
 
         if hex(self.addr) == "0x0":
             self.ident()
@@ -40,7 +44,7 @@ class packetparser:
     def ident(self):  # IDENT [31:0]
         self.hexconv()
         self.identity = TURF_IDS[self.data]
-        print("Address returned: {}, ID: {}".format(self.addr, self.identity))
+        print("Device ID: {} : {}".format(self.data, self.identity))
 
     def dateversion(self):  # DATEVERSION [31:0]
         self.datevers = "{:032b}".format(int(self.data))
@@ -55,7 +59,8 @@ class packetparser:
             "Last revised on {} {}, 20{}".format(MONTH[self.month], self.day, self.year)
         )
 
-    def control(self):
+    def control(self):  # CONTROL [31:0]
+        #
         print()
 
     def hexconv(self):
@@ -78,9 +83,14 @@ class packetparser:
             self.bintoint()
             self.dateverval[iter] = self.bintotal
 
-        self.year, self.month, self.day, self.major, self.minor, self.revision = map(
-            int, self.dateverval
-        )
+            (
+                self.year,
+                self.month,
+                self.day,
+                self.major,
+                self.minor,
+                self.revision,
+            ) = map(int, self.dateverval)
 
     def bintoint(self):
         self.bintotal = 0
