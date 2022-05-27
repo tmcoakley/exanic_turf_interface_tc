@@ -22,12 +22,12 @@ UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for w
 # listen for return packets on the b'Tx' port.
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
-UDP_IP = "127.0.0.3"
+UDP_IP = "198.168.1.128"
 
 ATTEMPT = 2  #  this is the number of times to attempt a connection
 TIMEOUT = 1  #  the time to wait for a response, written in seconds
 
-MY_IP = "127.0.0.1"
+MY_IP = "192.168.1.1"
 MY_PORT = 21347
 
 
@@ -55,9 +55,7 @@ class packet:
         self.cs.settimeout(
             TIMEOUT
         )  # sets the parameter for how long you want to listen for a response on the client side
-        self.cs.connect(
-            (UDP_IP, self.sending_port)
-        )  # connect to the correct port
+        self.cs.connect((UDP_IP, self.sending_port))  # connect to the correct port
         while True:
             if self.attempt == 0:  # if you finish an alloted amount of attempts
                 break
@@ -72,9 +70,7 @@ class packet:
         self.cs.sendto(self.hdr, (UDP_IP, self.sending_port))
         try:  # attempts to receive a response
             # if a response is received, save value
-            message, _ = self.cs.recvfrom(
-                1024
-            )  # can format to save returning address
+            message, _ = self.cs.recvfrom(1024)  # can format to save returning address
             self.ack = message[::-1]
             self.recd_parser(self.ack)
             self.is_recv = True
@@ -96,7 +92,7 @@ class packet:
     def recd_parser(
         self, totalData
     ):  # parser for received data from the TURF, will be 64 bits regardless of read/write
-        
+
         self.general_parser(totalData, DATA_REC)
         self.recdata = self.parseddata
 
