@@ -22,12 +22,12 @@ UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for w
 # listen for return packets on the b'Tx' port.
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
-UDP_IP = "198.168.1.128"
+UDP_IP = "127.0.0.3"
 
 ATTEMPT = 2  #  this is the number of times to attempt a connection
 TIMEOUT = 1  #  the time to wait for a response, written in seconds
 
-MY_IP = "192.168.1.1"
+MY_IP = "127.0.0.1"
 MY_PORT = 21347
 
 
