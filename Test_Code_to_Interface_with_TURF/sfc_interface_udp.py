@@ -3,32 +3,31 @@
 # eventually, need a packet class that expands on this, initializing with zero-filled bytes object of max length: bytes(MAX_LENGTH)
 import socket
 
-# Constants for sending
-ADDR_C = b"\x0F\xFF\xFF\xFF"  # this is a bytes class
-ADDR_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
-TAG_C = b"\xF0\x00\x00\x00"  # this is a bytes class
-TAG_bytearray = 0b11110000  # this is a bytes class ARRAY
+
+# USER INPUT
+ATTEMPT = 2  #  this is the number of times to attempt a connection
+TIMEOUT = 1  #  the time to wait for a response, written in seconds
+
+# INTERFACE IP AND PORT
+MY_IP = "127.0.0.1"
+MY_PORT = 21347
+
+# TURF IP AND PORTS
+UDP_IP = "127.0.0.3"
+UDP_RD = 21618  # read port in decimal
+UDP_WR = 21623  # write port in decimal
 
 # Constants for receiving
 TAG_REC = b"\x00\x00\x00\x00\xF0\x00\x00\x00"
+TAG_REC_bytearray = 0b11110000  # this is a bytes class ARRAY
 ADDR_REC = b"\x00\x00\x00\x00\x0F\xFF\xFF\xFF"
+ADDR_REC_bytearray = 0x0FFFFFFF  # this is a bytes ARRAY
 DATA_REC = b"\xFF\xFF\xFF\xFF\x00\x00\x00\x00"
 DATA_REC_bytearray = 0xFFFFFFFF
-
-# 2 byte ascii are b'Tr' and b'Tw' respectively, these are ports (note difference to addresses in a packet which is sent to a port)
-UDP_RD = b"\x54\x72"  # this is in hex, instead decimal: 21618 # obviously for reads
-UDP_WR = b"\x54\x77"  # this is in hex, instead decimal: 21623 # obviously for writes
 
 # listen for return packets on the b'Tx' port.
 UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
-UDP_IP = "127.0.0.3"
-
-ATTEMPT = 2  #  this is the number of times to attempt a connection
-TIMEOUT = 1  #  the time to wait for a response, written in seconds
-
-MY_IP = "127.0.0.1"
-MY_PORT = 21347
 
 
 class packet:
@@ -39,14 +38,16 @@ class packet:
         self.cs.bind((MY_IP, MY_PORT))  # have to bind to port to make it bidirectional
 
     def read(self, hdr):
-        self.sending_port = 21618  # 'Tr' --> receives read requests
-        self.hdr = hdr[::-1]
+        self.sending_port = UDP_RD  # 'Tr' --> receives read requests
+        self.data = hdr[::-1]
         self.recd()
         return self.ack
 
-    def write(self, hdr):
-        self.sending_port = 21623  # 'Tw' --> receives write requests
-        self.hdr = hdr[::-1]
+    def write(self, hdr, value):
+        self.sending_port = UDP_WR  # 'Tw' --> receives write requests
+        hdr = hdr[::-1]
+        value = value[::-1]
+        self.data = value + hdr
         self.recd()
         return self.ack
 
@@ -67,7 +68,7 @@ class packet:
 
     def conn(self):
         self.is_recv = False  # indicates whether a response has been received
-        self.cs.sendto(self.hdr, (UDP_IP, self.sending_port))
+        self.cs.sendto(self.data, (UDP_IP, self.sending_port))
         try:  # attempts to receive a response
             # if a response is received, save value
             message, _ = self.cs.recvfrom(1024)  # can format to save returning address
@@ -106,7 +107,7 @@ class packet:
         self.general_parser(totalData, TAG_REC)
         self.rectag = self.parseddata
 
-        self.tagrecd = self.rectag[4] & TAG_bytearray
+        self.tagrecd = self.rectag[4] & TAG_REC_bytearray
 
         self.general_parser(totalData, ADDR_REC)
         self.recaddr = self.parseddata
@@ -116,7 +117,7 @@ class packet:
             | (self.recaddr[5] << 16)
             | (self.recaddr[6] << 8)
             | self.recaddr[7]
-        ) & ADDR_bytearray
+        ) & ADDR_REC_bytearray
 
     def general_parser(self, bytestr, bytecomp):
         self.parseddata = (
