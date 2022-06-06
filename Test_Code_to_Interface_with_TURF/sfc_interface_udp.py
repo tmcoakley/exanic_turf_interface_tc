@@ -9,11 +9,11 @@ ATTEMPT = 2  #  this is the number of times to attempt a connection
 TIMEOUT = 1  #  the time to wait for a response, written in seconds
 
 # INTERFACE IP AND PORT
-MY_IP = "127.0.0.1"
+MY_IP = "192.168.1.1"
 MY_PORT = 21347
 
 # TURF IP AND PORTS
-UDP_IP = "127.0.0.3"
+UDP_IP = "192.168.1.128"
 UDP_RD = 21618  # read port in decimal
 UDP_WR = 21623  # write port in decimal
 
