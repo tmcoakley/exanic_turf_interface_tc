@@ -1,0 +1,6 @@
+tagl = b'\x30'
+tag = tagl[::-1]
+inttag = (32).to_bytes(len(tag), 'little')
+print(inttag)
+
+print(inttag.hex('x'))
