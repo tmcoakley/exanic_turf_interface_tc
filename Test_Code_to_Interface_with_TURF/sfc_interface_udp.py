@@ -8,12 +8,8 @@ import socket
 ATTEMPT = 2  #  this is the number of times to attempt a connection
 TIMEOUT = 1  #  the time to wait for a response, written in seconds
 
-# INTERFACE IP AND PORT
-MY_IP = "192.168.1.1"
-MY_PORT = 21347
-
 # TURF IP AND PORTS
-UDP_IP = "192.168.1.128"
+UDP_IP = "127.0.0.3"
 UDP_RD = 21618  # read port in decimal
 UDP_WR = 21623  # write port in decimal
 
@@ -31,11 +27,11 @@ ENDI = "little"
 
 
 class packet:
-    def __init__(self):
+    def __init__(self, host, port):
         self.cs = socket.socket(
             socket.AF_INET, socket.SOCK_DGRAM
         )  # create a control socket
-        self.cs.bind((MY_IP, MY_PORT))  # have to bind to port to make it bidirectional
+        self.cs.bind((host, port))  # have to bind to port to make it bidirectional
 
     def read(self, hdr):
         self.sending_port = UDP_RD  # 'Tr' --> receives read requests
@@ -108,6 +104,9 @@ class packet:
         self.rectag = self.parseddata
 
         self.tagrecd = self.rectag[4] & TAG_REC_bytearray
+        print(type(self.tagrecd))
+        print((self.tagrecd)) # to be removed
+        self.taginc() # calling this works but the function is breaking down somewhere
 
         self.general_parser(totalData, ADDR_REC)
         self.recaddr = self.parseddata
@@ -118,6 +117,12 @@ class packet:
             | (self.recaddr[6] << 8)
             | self.recaddr[7]
         ) & ADDR_REC_bytearray
+    
+    def taginc(self): # not sure why this isnt working works in theory need to find issue
+        blah = self.tagrecd + 16
+        print(blah)
+        self.newtag = blah.to_bytes((len(self.tagrecd)), ENDI)
+        print('yo',self.newtag)
 
     def general_parser(self, bytestr, bytecomp):
         self.parseddata = (
