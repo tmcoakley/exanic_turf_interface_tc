@@ -79,6 +79,7 @@ class packet:
     def print_ack(self):  # prints what is sent back from the server
         if self.is_recv is True:
             print("Received: {}".format(self.ack.hex("x")))
+            print("Data with Incremented Tag: {}".format(self.rec_inc.hex("x")))
             print(
                 "Acknowledged after {} attempt(s)".format((ATTEMPT + 1) - self.attempt)
             )
@@ -90,8 +91,7 @@ class packet:
         self, totalData
     ):  # parser for received data from the TURF, will be 64 bits regardless of read/write
 
-        self.general_parser(totalData, DATA_REC)
-        self.recdata = self.parseddata
+        self.recdata = self.general_parser(totalData, DATA_REC)
 
         self.datarecd = (
             (self.recdata[0] << 24)
@@ -100,16 +100,11 @@ class packet:
             | self.recdata[3]
         ) & DATA_REC_bytearray
 
-        self.general_parser(totalData, TAG_REC)
-        self.rectag = self.parseddata
-
+        self.rectag = self.general_parser(totalData, TAG_REC)
         self.tagrecd = self.rectag[4] & TAG_REC_bytearray
-        print(type(self.tagrecd))
-        print((self.tagrecd)) # to be removed
-        self.taginc() # calling this works but the function is breaking down somewhere
+        self.tagincr = self.tagrecd + 16
 
-        self.general_parser(totalData, ADDR_REC)
-        self.recaddr = self.parseddata
+        self.recaddr = self.general_parser(totalData, ADDR_REC)
 
         self.addrrecd = (
             (self.recaddr[4]) << 24
@@ -117,14 +112,14 @@ class packet:
             | (self.recaddr[6] << 8)
             | self.recaddr[7]
         ) & ADDR_REC_bytearray
-    
-    def taginc(self): # not sure why this isnt working works in theory need to find issue
-        blah = self.tagrecd + 16
-        print(blah)
-        self.newtag = blah.to_bytes((len(self.tagrecd)), ENDI)
-        print('yo',self.newtag)
+
+        self.rec_inc = (
+            self.datarecd.to_bytes(4, "big")
+            + self.tagincr.to_bytes(1, "big")
+            + self.addrrecd.to_bytes(3, "big")
+        )
 
     def general_parser(self, bytestr, bytecomp):
-        self.parseddata = (
+        return (
             int.from_bytes(bytestr, ENDI) & int.from_bytes(bytecomp, ENDI)
         ).to_bytes((len(bytestr)), ENDI)
