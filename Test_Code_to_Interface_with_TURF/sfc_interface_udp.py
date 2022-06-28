@@ -26,7 +26,7 @@ UDP_TX = b"Tx"  # in hex would be: 0x5478, instead decimal: 21,624
 ENDI = "little"
 
 
-class packet:
+class Packet:
     def __init__(self, host, port):
         self.cs = socket.socket(
             socket.AF_INET, socket.SOCK_DGRAM
